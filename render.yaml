@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: we-care-water-platform
+    env: python
+    buildCommand: ""
+    startCommand: python server.py
+    plan: free
+    disk:
+      name: leads-data
+      mountPath: /app/data
+      sizeGB: 1

@@ -1,0 +1,2179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WE CARE &mdash; Enterprise Sales CRM &amp; Pipeline Management</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    colors: {
+                        wecare: {
+                            blue: '#0284c7',
+                            darkblue: '#0369a1',
+                            navy: '#0f172a',
+                            light: '#f0f9ff',
+                            green: '#10b981',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .kanban-col {
+            min-height: calc(100vh - 310px);
+        }
+        .drag-over {
+            background-color: #f0fdf4 !important;
+            border-color: #22c55e !important;
+        }
+        .sidebar-link.active {
+            background-color: #0284c7;
+            color: #ffffff;
+            font-weight: 700;
+        }
+        .sidebar-link.active i {
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased selection:bg-sky-500 selection:text-white">
+
+    <!-- LOGIN SCREEN MODAL (SHOWN IF UNAUTHENTICATED) -->
+    <div id="loginScreen" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-white max-w-md w-full rounded-3xl p-8 sm:p-10 shadow-2xl border border-slate-200 animate-in fade-in">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-sky-500 to-emerald-400 flex items-center justify-center text-white mx-auto shadow-xl shadow-sky-500/25 mb-4">
+                    <i data-lucide="droplet" class="w-9 h-9 fill-white"></i>
+                </div>
+                <h1 class="text-2xl font-black text-wecare-navy tracking-tight">WE CARE <span class="text-wecare-blue">CRM</span></h1>
+                <p class="text-[11px] font-mono font-bold text-slate-400 uppercase tracking-widest mt-1">Authorized Sales &amp; Distribution Portal</p>
+            </div>
+
+            <div id="loginError" class="hidden mb-4 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2.5">
+                <i data-lucide="alert-circle" class="w-4 h-4 shrink-0 text-rose-600"></i>
+                <span id="loginErrorMsg">Invalid username or password.</span>
+            </div>
+
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5" for="loginUsername">Staff Username</label>
+                    <div class="relative">
+                        <i data-lucide="user" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                        <input type="text" id="loginUsername" required autocomplete="username" placeholder="Enter your username" class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-3.5 py-3 text-xs text-slate-800 focus:outline-none focus:border-wecare-blue focus:bg-white transition-all font-mono">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5" for="loginPassword">Password</label>
+                    <div class="relative">
+                        <i data-lucide="lock" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                        <input type="password" id="loginPassword" required autocomplete="current-password" placeholder="Enter your password" class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-3.5 py-3 text-xs text-slate-800 focus:outline-none focus:border-wecare-blue focus:bg-white transition-all font-mono">
+                    </div>
+                </div>
+                <button type="submit" id="loginBtn" class="w-full py-3.5 rounded-xl bg-wecare-blue hover:bg-wecare-darkblue text-white font-bold text-xs uppercase tracking-wider transition-all shadow-md shadow-sky-500/20 flex items-center justify-center gap-2">
+                    <i data-lucide="shield-check" class="w-4 h-4"></i>
+                    <span>Secure Sign In</span>
+                </button>
+            </form>
+
+            <div class="mt-6 pt-5 border-t border-slate-100 text-center">
+                <div class="text-[11px] text-slate-400 leading-relaxed">
+                    Protected corporate system. All administrative access attempts are cryptographically verified and audit logged.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN ENTERPRISE CRM WRAPPER -->
+    <div id="appContainer" class="hidden min-h-screen flex flex-col lg:flex-row">
+
+        <!-- MOBILE SIDEBAR OVERLAY -->
+        <div id="mobileSidebarOverlay" onclick="toggleMobileSidebar()" class="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-xs hidden lg:hidden"></div>
+
+        <!-- PERMANENT SIDEBAR NAVIGATION -->
+        <aside id="sidebar" class="fixed lg:sticky top-0 left-0 z-50 h-screen w-64 bg-slate-900 text-slate-300 flex flex-col justify-between shrink-0 border-r border-slate-800 transition-transform duration-300 -translate-x-full lg:translate-x-0">
+            <div>
+                <!-- Brand Header -->
+                <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+                    <a href="/admin/dashboard" onclick="navigateAdmin('/admin/dashboard', event)" class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-emerald-400 flex items-center justify-center text-white shadow-lg shadow-sky-500/20">
+                            <i data-lucide="droplet" class="w-5 h-5 fill-white"></i>
+                        </div>
+                        <div>
+                            <div class="font-extrabold text-white text-base tracking-tight leading-none">WE CARE</div>
+                            <div class="text-[9px] font-mono font-bold text-sky-400 uppercase tracking-widest mt-1">SALES CRM</div>
+                        </div>
+                    </a>
+                    <button onclick="toggleMobileSidebar()" class="lg:hidden p-1.5 text-slate-400 hover:text-white rounded-lg">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <!-- Current User Card -->
+                <div class="p-4 mx-3 my-3 rounded-2xl bg-slate-800/60 border border-slate-700/60 flex items-center gap-3">
+                    <div id="userAvatar" class="w-9 h-9 rounded-xl bg-sky-500 text-white font-black flex items-center justify-center text-sm shadow-sm shrink-0">A</div>
+                    <div class="min-w-0 flex-1">
+                        <div id="userDisplayName" class="text-xs font-bold text-white truncate">Administrator</div>
+                        <div class="mt-0.5">
+                            <span id="roleBadge" class="inline-block px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                SUPER ADMIN
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Menu Items -->
+                <nav class="px-3 space-y-1">
+                    <a href="/admin/dashboard" onclick="navigateAdmin('/admin/dashboard', event)" id="nav-dashboard" class="sidebar-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all">
+                        <i data-lucide="layout-dashboard" class="w-4 h-4 text-slate-400"></i>
+                        <span>Dashboard</span>
+                    </a>
+
+                    <a href="/admin/pipeline" onclick="navigateAdmin('/admin/pipeline', event)" id="nav-pipeline" class="sidebar-link flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="kanban" class="w-4 h-4 text-slate-400"></i>
+                            <span>Sales Pipeline</span>
+                        </div>
+                        <span id="navPipelineBadge" class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-slate-800 text-slate-300">5</span>
+                    </a>
+
+                    <a href="/admin/leads" onclick="navigateAdmin('/admin/leads', event)" id="nav-leads" class="sidebar-link flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="users" class="w-4 h-4 text-slate-400"></i>
+                            <span>All Leads</span>
+                        </div>
+                        <span id="navLeadsCount" class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-slate-800 text-slate-300">--</span>
+                    </a>
+
+                    <a href="/admin/dealers" onclick="navigateAdmin('/admin/dealers', event)" id="nav-dealers" class="sidebar-link flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="briefcase" class="w-4 h-4 text-slate-400"></i>
+                            <span>Dealer Network</span>
+                        </div>
+                        <span id="navDealersCount" class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-slate-800 text-slate-300">--</span>
+                    </a>
+
+                    <a href="/admin/follow-ups" onclick="navigateAdmin('/admin/follow-ups', event)" id="nav-followups" class="sidebar-link flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="calendar-clock" class="w-4 h-4 text-slate-400"></i>
+                            <span>Follow-ups</span>
+                        </div>
+                        <span id="navFollowupsBadge" class="hidden text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">!</span>
+                    </a>
+
+                    <a href="/admin/reports" onclick="navigateAdmin('/admin/reports', event)" id="nav-reports" class="sidebar-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all">
+                        <i data-lucide="bar-chart-3" class="w-4 h-4 text-slate-400"></i>
+                        <span>Reports &amp; Analytics</span>
+                    </a>
+
+                    <a href="/admin/templates" onclick="navigateAdmin('/admin/templates', event)" id="nav-templates" class="sidebar-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all">
+                        <i data-lucide="message-square" class="w-4 h-4 text-slate-400"></i>
+                        <span>WhatsApp Templates</span>
+                    </a>
+
+                    <a href="/admin/settings" onclick="navigateAdmin('/admin/settings', event)" id="nav-settings" class="sidebar-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all">
+                        <i data-lucide="settings" class="w-4 h-4 text-slate-400"></i>
+                        <span>Settings</span>
+                    </a>
+
+                    <a href="/admin/users" onclick="navigateAdmin('/admin/users', event)" id="nav-users" class="sidebar-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all hidden">
+                        <i data-lucide="shield" class="w-4 h-4 text-slate-400"></i>
+                        <span>Users &amp; Roles</span>
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Sidebar Bottom Controls -->
+            <div class="p-3 border-t border-slate-800 space-y-1">
+                <a href="/" target="_blank" class="flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all">
+                    <div class="flex items-center gap-2.5">
+                        <i data-lucide="external-link" class="w-4 h-4 text-slate-500"></i>
+                        <span>Public Website</span>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-600"></i>
+                </a>
+
+                <button onclick="handleLogout()" class="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-rose-400 hover:bg-rose-500/10 transition-all text-left">
+                    <i data-lucide="log-out" class="w-4 h-4 text-rose-400"></i>
+                    <span>Sign Out</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <div class="flex-1 flex flex-col min-w-0">
+
+            <!-- TOP BAR -->
+            <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+                <div class="px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <button onclick="toggleMobileSidebar()" class="lg:hidden p-2 text-slate-600 hover:text-slate-900 rounded-xl hover:bg-slate-100">
+                            <i data-lucide="menu" class="w-5 h-5"></i>
+                        </button>
+                        <div>
+                            <div class="flex items-center gap-2 text-xs text-slate-400 font-mono">
+                                <span>WE CARE CRM</span>
+                                <span>/</span>
+                                <span id="breadcrumbSection" class="text-slate-600 font-bold uppercase">Dashboard</span>
+                            </div>
+                            <h1 id="pageTitle" class="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight leading-tight">Sales Dashboard</h1>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2.5 sm:gap-3">
+                        <button onclick="navigateAdmin('/admin/follow-ups')" id="overdueAlertBtn" class="hidden text-xs font-bold px-3 py-1.5 rounded-xl bg-rose-50 text-rose-800 border border-rose-200 flex items-center gap-1.5 animate-pulse">
+                            <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-rose-600"></i>
+                            <span id="overdueCountText">0 Overdue Follow-ups</span>
+                        </button>
+
+                        <button onclick="exportCSV()" class="text-xs font-bold bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-xs transition-all">
+                            <i data-lucide="download" class="w-4 h-4 text-wecare-blue"></i>
+                            <span class="hidden sm:inline">Export CSV</span>
+                        </button>
+
+                        <button onclick="openNewLeadModal()" class="text-xs font-bold bg-wecare-blue hover:bg-wecare-darkblue text-white px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-md shadow-sky-500/20 transition-all">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            <span>New Lead</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- VIEWS CONTAINER -->
+            <main class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+
+                <!-- ============================================== -->
+                <!-- VIEW 1: SALES DASHBOARD (/admin/dashboard)     -->
+                <!-- ============================================== -->
+                <div id="view-dashboard" class="admin-view space-y-6">
+                    <!-- 8 KEY METRICS CARDS -->
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+                            <div class="flex items-center justify-between text-slate-500 mb-2">
+                                <span class="text-[11px] font-bold uppercase tracking-wider">Total Enquiries</span>
+                                <div class="w-8 h-8 rounded-lg bg-sky-50 text-wecare-blue flex items-center justify-center">
+                                    <i data-lucide="inbox" class="w-4 h-4"></i>
+                                </div>
+                            </div>
+                            <div class="text-3xl font-extrabold text-slate-900 font-mono" id="statTotal">--</div>
+                            <div class="text-[11px] text-slate-500 mt-1">Across all product lines</div>
+                        </div>
+
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+                            <div class="flex items-center justify-between text-slate-500 mb-2">
+                                <span class="text-[11px] font-bold uppercase tracking-wider">New Leads Today</span>
+                                <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                    <i data-lucide="sparkles" class="w-4 h-4"></i>
+                                </div>
+                            </div>
+                            <div class="text-3xl font-extrabold text-slate-900 font-mono" id="statNewToday">--</div>
+                            <div class="text-[11px] text-emerald-600 font-semibold mt-1">Requires initial contact</div>
+                        </div>
+
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+                            <div class="flex items-center justify-between text-slate-500 mb-2">
+                                <span class="text-[11px] font-bold uppercase tracking-wider">Pending Follow-ups</span>
+                                <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                                </div>
+                            </div>
+                            <div class="text-3xl font-extrabold text-slate-900 font-mono" id="statPendingFollowups">--</div>
+                            <div class="text-[11px] text-rose-500 font-semibold mt-1" id="statOverdueText">0 Overdue</div>
+                        </div>
+
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+                            <div class="flex items-center justify-between text-slate-500 mb-2">
+                                <span class="text-[11px] font-bold uppercase tracking-wider">Conversion Rate</span>
+                                <div class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+                                    <i data-lucide="trending-up" class="w-4 h-4"></i>
+                                </div>
+                            </div>
+                            <div class="text-3xl font-extrabold text-slate-900 font-mono" id="statConversion">--%</div>
+                            <div class="text-[11px] text-slate-500 mt-1">Closed Deals / Total</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 flex items-center gap-3 shadow-xs">
+                            <div class="w-10 h-10 rounded-xl bg-sky-100 text-wecare-blue flex items-center justify-center font-bold">
+                                <i data-lucide="file-text" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs text-slate-500 font-semibold">Price Quotes</div>
+                                <div class="text-xl font-black text-slate-800 font-mono" id="statQuotes">--</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 flex items-center gap-3 shadow-xs">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                                <i data-lucide="briefcase" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs text-slate-500 font-semibold">Dealer Applications</div>
+                                <div class="text-xl font-black text-slate-800 font-mono" id="statDealers">--</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 flex items-center gap-3 shadow-xs">
+                            <div class="w-10 h-10 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center font-bold">
+                                <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs text-slate-500 font-semibold">Qualified Leads</div>
+                                <div class="text-xl font-black text-slate-800 font-mono" id="statQualified">--</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 flex items-center gap-3 shadow-xs">
+                            <div class="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold">
+                                <i data-lucide="award" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs text-slate-500 font-semibold">Closed Deals</div>
+                                <div class="text-xl font-black text-slate-800 font-mono" id="statClosed">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PIPELINE STAGE BREAKDOWN & SOURCE CARDS -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <h2 class="text-sm font-bold text-slate-800">Sales Pipeline Velocity</h2>
+                                    <p class="text-xs text-slate-400">Progression across the 5 lifecycle stages</p>
+                                </div>
+                                <button onclick="navigateAdmin('/admin/pipeline')" class="text-xs font-bold text-wecare-blue hover:underline flex items-center gap-1">
+                                    <span>Open Kanban</span>
+                                    <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                            <div class="space-y-3" id="stageProgressBars">
+                                <!-- Injected dynamically -->
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs">
+                            <h2 class="text-sm font-bold text-slate-800 mb-1">Lead Source Breakdown</h2>
+                            <p class="text-xs text-slate-400 mb-4">Enquiry acquisition distribution</p>
+                            <div class="space-y-3" id="sourceDistribution">
+                                <!-- Injected dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- QUICK RECENT LEADS -->
+                    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h2 class="text-sm font-bold text-slate-800">Recent Enquiries</h2>
+                                <p class="text-xs text-slate-400">Latest submissions requiring action</p>
+                            </div>
+                            <button onclick="navigateAdmin('/admin/leads')" class="text-xs font-bold text-wecare-blue hover:underline flex items-center gap-1">
+                                <span>View All Leads</span>
+                                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="text-[11px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2">
+                                        <th class="py-2.5 px-3">Ref Code</th>
+                                        <th class="py-2.5 px-3">Customer</th>
+                                        <th class="py-2.5 px-3">Size / Capacity</th>
+                                        <th class="py-2.5 px-3">Stage</th>
+                                        <th class="py-2.5 px-3 text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dashboardRecentLeads" class="divide-y divide-slate-100 text-xs font-mono">
+                                    <!-- Injected dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================== -->
+                <!-- VIEW 2: PIPELINE KANBAN (/admin/pipeline)      -->
+                <!-- ============================================== -->
+                <div id="view-pipeline" class="admin-view hidden space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+                        <div>
+                            <h2 class="text-base font-extrabold text-slate-900">Interactive Pipeline Board</h2>
+                            <p class="text-xs text-slate-500">Drag and drop cards between stages to persist lifecycle updates in real time</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="loadKanban()" class="px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-all">
+                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Refresh Board
+                            </button>
+                            <button onclick="openNewLeadModal()" class="px-3.5 py-2 bg-wecare-blue hover:bg-wecare-darkblue text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Lead
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- KANBAN COLUMNS (5 STAGES) -->
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+                        <!-- Column 1: NEW -->
+                        <div class="bg-slate-200/50 rounded-2xl p-3 border border-slate-200 flex flex-col">
+                            <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-300/70">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-sky-500"></span>
+                                    <span class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">New</span>
+                                </div>
+                                <span class="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-white text-slate-700 shadow-xs" id="kCount-NEW">0</span>
+                            </div>
+                            <div class="kanban-col space-y-2.5 flex-1 overflow-y-auto" id="kanban-NEW" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'NEW')">
+                                <!-- Injected cards -->
+                            </div>
+                        </div>
+
+                        <!-- Column 2: IN_REVIEW -->
+                        <div class="bg-slate-200/50 rounded-2xl p-3 border border-slate-200 flex flex-col">
+                            <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-300/70">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                                    <span class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">In Review</span>
+                                </div>
+                                <span class="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-white text-slate-700 shadow-xs" id="kCount-IN_REVIEW">0</span>
+                            </div>
+                            <div class="kanban-col space-y-2.5 flex-1 overflow-y-auto" id="kanban-IN_REVIEW" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'IN_REVIEW')">
+                                <!-- Injected cards -->
+                            </div>
+                        </div>
+
+                        <!-- Column 3: CONTACTED -->
+                        <div class="bg-slate-200/50 rounded-2xl p-3 border border-slate-200 flex flex-col">
+                            <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-300/70">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                                    <span class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Contacted</span>
+                                </div>
+                                <span class="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-white text-slate-700 shadow-xs" id="kCount-CONTACTED">0</span>
+                            </div>
+                            <div class="kanban-col space-y-2.5 flex-1 overflow-y-auto" id="kanban-CONTACTED" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'CONTACTED')">
+                                <!-- Injected cards -->
+                            </div>
+                        </div>
+
+                        <!-- Column 4: QUALIFIED -->
+                        <div class="bg-slate-200/50 rounded-2xl p-3 border border-slate-200 flex flex-col">
+                            <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-300/70">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                                    <span class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Qualified</span>
+                                </div>
+                                <span class="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-white text-slate-700 shadow-xs" id="kCount-QUALIFIED">0</span>
+                            </div>
+                            <div class="kanban-col space-y-2.5 flex-1 overflow-y-auto" id="kanban-QUALIFIED" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'QUALIFIED')">
+                                <!-- Injected cards -->
+                            </div>
+                        </div>
+
+                        <!-- Column 5: CLOSED -->
+                        <div class="bg-slate-200/50 rounded-2xl p-3 border border-slate-200 flex flex-col">
+                            <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-300/70">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-slate-900"></span>
+                                    <span class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Closed</span>
+                                </div>
+                                <span class="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-white text-slate-700 shadow-xs" id="kCount-CLOSED">0</span>
+                            </div>
+                            <div class="kanban-col space-y-2.5 flex-1 overflow-y-auto" id="kanban-CLOSED" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'CLOSED')">
+                                <!-- Injected cards -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================== -->
+                <!-- VIEW 3: ALL LEADS (/admin/leads)               -->
+                <!-- ============================================== -->
+                <div id="view-leads" class="admin-view hidden space-y-4">
+                    <!-- SEARCH & FILTER BAR -->
+                    <div class="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs flex flex-wrap items-center justify-between gap-3">
+                        <div class="relative w-full md:w-80">
+                            <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" id="leadSearch" oninput="debounceLoadLeads()" placeholder="Search customer, phone, size, city..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-wecare-blue">
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-2">
+                            <select id="leadTypeFilter" onchange="loadLeadsTable()" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700">
+                                <option value="all">All Types</option>
+                                <option value="quote">Quotes Only</option>
+                                <option value="dealer">Dealers Only</option>
+                                <option value="water_test">Water Tests Only</option>
+                                <option value="contact">Contact Messages</option>
+                            </select>
+
+                            <select id="leadStageFilter" onchange="loadLeadsTable()" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700">
+                                <option value="all">All Stages</option>
+                                <option value="NEW">New</option>
+                                <option value="IN_REVIEW">In Review</option>
+                                <option value="CONTACTED">Contacted</option>
+                                <option value="QUALIFIED">Qualified</option>
+                                <option value="CLOSED">Closed Deals</option>
+                            </select>
+
+                            <select id="leadPriorityFilter" onchange="loadLeadsTable()" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700">
+                                <option value="all">All Priorities</option>
+                                <option value="URGENT">Urgent</option>
+                                <option value="HIGH">High</option>
+                                <option value="MEDIUM">Medium</option>
+                                <option value="LOW">Low</option>
+                            </select>
+
+                            <button onclick="loadLeadsTable()" class="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-600 transition-all">
+                                <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- TABLE -->
+                    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-50/70 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                                        <th class="py-3 px-5">Ref Code</th>
+                                        <th class="py-3 px-5">Customer &amp; Location</th>
+                                        <th class="py-3 px-5">Product Size / Flow</th>
+                                        <th class="py-3 px-5">Priority &amp; Follow-up</th>
+                                        <th class="py-3 px-5">Stage</th>
+                                        <th class="py-3 px-5 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="leadsTableBody" class="divide-y divide-slate-100 text-xs">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================== -->
+                <!-- VIEW 4: DEALER NETWORK (/admin/dealers)        -->
+                <!-- ============================================== -->
+                <div id="view-dealers" class="admin-view hidden space-y-6">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-base font-extrabold text-slate-900">Dealer &amp; Distributor Network Management</h2>
+                            <p class="text-xs text-slate-500">Track and review applications from plumbing contractors, industrial suppliers, and regional distributors</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                Total Inquiries: <span id="dealerTotalBadge">0</span>
+                            </span>
+                            <button onclick="exportCSV()" class="px-3.5 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i> Export Dealers
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- DEALERS TABLE -->
+                    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-50/70 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                                        <th class="py-3 px-5">Ref Code</th>
+                                        <th class="py-3 px-5">Business &amp; Principal</th>
+                                        <th class="py-3 px-5">City / Territory</th>
+                                        <th class="py-3 px-5">Est. Volume / Capacity</th>
+                                        <th class="py-3 px-5">Stage</th>
+                                        <th class="py-3 px-5 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dealersTableBody" class="divide-y divide-slate-100 text-xs font-mono">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================== -->
+                <!-- VIEW 5: FOLLOW-UP MANAGEMENT (/admin/follow-ups) -->
+                <!-- ============================================== -->
+                <div id="view-followups" class="admin-view hidden space-y-6">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-base font-extrabold text-slate-900">Follow-Up Command Centre</h2>
+                            <p class="text-xs text-slate-500">Prioritized customer calls, quotation presentations, and technical consultations</p>
+                        </div>
+                        <button onclick="loadFollowupsView()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-all">
+                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Refresh Tasks
+                        </button>
+                    </div>
+
+                    <!-- OVERDUE SECTION -->
+                    <div class="bg-rose-50/50 rounded-2xl border border-rose-200 p-5 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2 text-rose-800 font-extrabold text-sm">
+                                <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-600"></i>
+                                <span>Immediate Action Required: Overdue Follow-ups</span>
+                            </div>
+                            <span id="overdueBadgeCount" class="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-rose-200 text-rose-900">0</span>
+                        </div>
+                        <div id="overdueCardsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            <!-- Injected -->
+                        </div>
+                    </div>
+
+                    <!-- UPCOMING / SCHEDULED SECTION -->
+                    <div class="bg-white rounded-2xl border border-slate-200/80 p-5 space-y-3 shadow-xs">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2 text-slate-800 font-extrabold text-sm">
+                                <i data-lucide="clock" class="w-4 h-4 text-wecare-blue"></i>
+                                <span>Scheduled Follow-ups</span>
+                            </div>
+                            <span id="scheduledBadgeCount" class="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-sky-100 text-wecare-blue">0</span>
+                        </div>
+                        <div id="scheduledCardsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            <!-- Injected -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================== -->
+                <!-- VIEW 6: REPORTS & ANALYTICS (/admin/reports)   -->
+                <!-- ============================================== -->
+                <div id="view-reports" class="admin-view hidden space-y-6">
+                    <div class="flex flex-wrap items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
+                        <div>
+                            <h2 class="text-base font-extrabold text-slate-900">Sales Intelligence &amp; Demand Reports</h2>
+                            <p class="text-xs text-slate-500">Territory distribution and product-size demand analytics</p>
+                        </div>
+                        <button onclick="exportCSV()" class="px-4 py-2 rounded-xl bg-wecare-blue hover:bg-wecare-darkblue text-white text-xs font-bold flex items-center gap-2 shadow-sm transition-all">
+                            <i data-lucide="download" class="w-4 h-4"></i> Download Full CSV Report
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Product-Size Demand -->
+                        <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
+                            <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                <i data-lucide="package" class="w-4 h-4 text-wecare-blue"></i>
+                                Scale Remover Product-Size Demand
+                            </h3>
+                            <div class="space-y-3" id="reportProductDemand">
+                                <!-- Dynamic -->
+                            </div>
+                        </div>
+
+                        <!-- Territory Demand -->
+                        <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
+                            <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                <i data-lucide="map-pin" class="w-4 h-4 text-emerald-600"></i>
+                                Top Inquiry Hubs (City-Wise)
+                            </h3>
+                            <div class="space-y-3" id="reportCityDemand">
+                                <!-- Dynamic -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================== -->
+                <!-- VIEW 7: WHATSAPP TEMPLATES (/admin/templates)  -->
+                <!-- ============================================== -->
+                <div id="view-templates" class="admin-view hidden space-y-6">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+                        <div>
+                            <h2 class="text-base font-extrabold text-slate-900">Editable WhatsApp Customer Message Templates</h2>
+                            <p class="text-xs text-slate-500 mt-1">Personalize messaging sent to leads via WhatsApp click-to-chat. Use placeholders: <span class="font-mono text-wecare-blue">{customer_name}, {ref_code}, {product_size}, {business_name}, {city}</span></p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1" for="tpl_new_quotation">1. New Quotation Enquiry</label>
+                                <textarea id="tpl_new_quotation" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 focus:outline-none focus:border-wecare-blue font-sans"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1" for="tpl_dealer_registration">2. Dealer Registration</label>
+                                <textarea id="tpl_dealer_registration" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 focus:outline-none focus:border-wecare-blue font-sans"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1" for="tpl_water_testing">3. Water Testing Request</label>
+                                <textarea id="tpl_water_testing" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 focus:outline-none focus:border-wecare-blue font-sans"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1" for="tpl_followup_reminder">4. Follow-up Reminder</label>
+                                <textarea id="tpl_followup_reminder" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 focus:outline-none focus:border-wecare-blue font-sans"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1" for="tpl_quotation_sent">5. Quotation Sent</label>
+                                <textarea id="tpl_quotation_sent" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 focus:outline-none focus:border-wecare-blue font-sans"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1" for="tpl_feedback_request">6. Customer Feedback Request</label>
+                                <textarea id="tpl_feedback_request" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 focus:outline-none focus:border-wecare-blue font-sans"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end pt-2">
+                            <button onclick="saveTemplates()" class="px-5 py-2.5 rounded-xl bg-wecare-blue hover:bg-wecare-darkblue text-white text-xs font-bold shadow-md shadow-sky-500/20 transition-all flex items-center gap-2">
+                                <i data-lucide="save" class="w-4 h-4"></i>
+                                <span>Save Message Templates</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================== -->
+                <!-- VIEW 8: SETTINGS (/admin/settings)             -->
+                <!-- ============================================== -->
+                <div id="view-settings" class="admin-view hidden space-y-6">
+                    <!-- NOTIFICATION INTEGRATION SETTINGS -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+                        <div>
+                            <h2 class="text-base font-extrabold text-slate-900">Email &amp; Notification Integration</h2>
+                            <p class="text-xs text-slate-500">Configure notifications sent to your sales department when new leads arrive.</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1" for="setting_smtp_host">SMTP Server Host</label>
+                                <input type="text" id="setting_smtp_host" placeholder="smtp.gmail.com" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 font-mono focus:outline-none focus:border-wecare-blue">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1" for="setting_smtp_port">SMTP Port</label>
+                                <input type="text" id="setting_smtp_port" placeholder="587" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 font-mono focus:outline-none focus:border-wecare-blue">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1" for="setting_notify_email">Sales Team Notification Email</label>
+                                <input type="email" id="setting_notify_email" placeholder="sales@wecare.com" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 font-mono focus:outline-none focus:border-wecare-blue">
+                            </div>
+                        </div>
+
+                        <div class="p-4 bg-sky-50 rounded-2xl border border-sky-100 text-sky-900 text-xs flex items-start gap-3">
+                            <i data-lucide="info" class="w-4 h-4 text-wecare-blue shrink-0 mt-0.5"></i>
+                            <div class="leading-relaxed">
+                                <strong>WhatsApp Delivery Protocol:</strong> Standard click-to-chat links with variable substitution are active. Automated direct cloud push requires an authorized Meta WhatsApp Business Cloud Webhook credentials pack.
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end pt-2">
+                            <button onclick="saveNotificationSettings()" class="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-sm transition-all flex items-center gap-2">
+                                <i data-lucide="check" class="w-4 h-4"></i>
+                                <span>Save Integration Settings</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- SYSTEM DIAGNOSTICS & AUDIT SPECS -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+                        <h2 class="text-base font-extrabold text-slate-900">System Architecture &amp; Database State</h2>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-mono">
+                            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                                <span class="text-slate-400 block text-[10px]">DATABASE ENGINE</span>
+                                <strong class="text-slate-800">SQLite 3 (WAL Mode)</strong>
+                            </div>
+                            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                                <span class="text-slate-400 block text-[10px]">API PROTOCOL</span>
+                                <strong class="text-slate-800">REST (JSON over HTTP)</strong>
+                            </div>
+                            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                                <span class="text-slate-400 block text-[10px]">SECURITY SHIELD</span>
+                                <strong class="text-emerald-700">Active (Protected DB &amp; Py)</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================== -->
+                <!-- VIEW 9: TEAM & ROLES (/admin/users)            -->
+                <!-- ============================================== -->
+                <div id="view-users" class="admin-view hidden space-y-6">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+                        <div class="flex flex-wrap items-center justify-between gap-4">
+                            <div>
+                                <h2 class="text-base font-extrabold text-slate-900">Authorized Sales Team Members</h2>
+                                <p class="text-xs text-slate-500">Manage user roles, access credentials, and department permissions</p>
+                            </div>
+                            <button onclick="openAddUserModal()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all">
+                                <i data-lucide="user-plus" class="w-4 h-4"></i> Add User
+                            </button>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-50 text-[11px] font-bold uppercase text-slate-500 border-b border-slate-200">
+                                        <th class="py-2.5 px-4">User</th>
+                                        <th class="py-2.5 px-4">Username</th>
+                                        <th class="py-2.5 px-4">Email</th>
+                                        <th class="py-2.5 px-4">Role</th>
+                                        <th class="py-2.5 px-4">Status</th>
+                                        <th class="py-2.5 px-4 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody" class="divide-y divide-slate-100 text-xs font-mono">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- MODALS: CUSTOMER PROFILE, MANUAL LEAD, ADD USER          -->
+    <!-- ======================================================== -->
+
+    <!-- 1. CUSTOMER PROFILE & LIFECYCLE MODAL -->
+    <div id="profileModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+        <div class="bg-white max-w-2xl w-full rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-200 relative max-h-[90vh] overflow-y-auto animate-in fade-in">
+            <button onclick="closeProfileModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-2">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+
+            <div class="flex items-center gap-3 mb-4">
+                <span id="profRefCode" class="px-3 py-1 rounded-full text-xs font-mono font-bold bg-sky-100 text-sky-800"></span>
+                <span id="profStageBadge" class="px-2.5 py-0.5 rounded-full text-xs font-bold font-mono"></span>
+                <span id="profDate" class="text-xs text-slate-400 ml-auto font-mono"></span>
+            </div>
+
+            <!-- Customer Overview -->
+            <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200/70 mb-4 space-y-2">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <div class="text-[10px] uppercase font-bold text-slate-400">Customer Name</div>
+                        <div id="profName" class="font-extrabold text-slate-800 text-sm"></div>
+                        <div id="profCompany" class="text-xs text-slate-500 font-semibold"></div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] uppercase font-bold text-slate-400">Territory / Location</div>
+                        <div id="profLocation" class="font-bold text-slate-700 text-xs"></div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] uppercase font-bold text-slate-400">Phone / WhatsApp</div>
+                        <div id="profPhone" class="font-mono text-slate-800 text-xs"></div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] uppercase font-bold text-slate-400">Email Address</div>
+                        <div id="profEmail" class="font-mono text-slate-800 text-xs"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Technical Water Parameters -->
+            <div class="p-4 bg-sky-50/60 rounded-2xl border border-sky-100 mb-4">
+                <div class="text-[10px] uppercase font-bold text-wecare-blue mb-2">Technical Water &amp; Line Specifications</div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                    <div><span class="text-slate-500 block text-[10px]">Model Size:</span> <strong id="profSize" class="text-slate-800 font-mono"></strong></div>
+                    <div><span class="text-slate-500 block text-[10px]">Flow Rate:</span> <strong id="profFlow" class="text-slate-800 font-mono"></strong></div>
+                    <div><span class="text-slate-500 block text-[10px]">Water Hardness:</span> <strong id="profHardness" class="text-slate-800 font-mono"></strong></div>
+                    <div><span class="text-slate-500 block text-[10px]">Reported TDS:</span> <strong id="profTds" class="text-slate-800 font-mono"></strong></div>
+                </div>
+                <div class="mt-2 pt-2 border-t border-sky-100 text-xs">
+                    <span class="text-[10px] uppercase font-bold text-slate-400">Customer Line Notes:</span>
+                    <p id="profNotes" class="italic text-slate-700 mt-0.5"></p>
+                </div>
+            </div>
+
+            <!-- Follow-up & Sales Pipeline Controls -->
+            <div class="p-4 bg-white rounded-2xl border border-slate-200 mb-4 space-y-3">
+                <div class="text-xs font-bold text-slate-800">Pipeline &amp; Follow-up Management</div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1" for="profStageSelect">Stage</label>
+                        <select id="profStageSelect" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs font-bold text-slate-800">
+                            <option value="NEW">NEW</option>
+                            <option value="IN_REVIEW">IN REVIEW</option>
+                            <option value="CONTACTED">CONTACTED</option>
+                            <option value="QUALIFIED">QUALIFIED</option>
+                            <option value="CLOSED">CLOSED</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1" for="profPrioritySelect">Priority</label>
+                        <select id="profPrioritySelect" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs font-bold text-slate-800">
+                            <option value="LOW">LOW</option>
+                            <option value="MEDIUM">MEDIUM</option>
+                            <option value="HIGH">HIGH</option>
+                            <option value="URGENT">URGENT</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1" for="profAssignedInput">Assigned Executive</label>
+                        <input type="text" id="profAssignedInput" placeholder="Executive Name" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs text-slate-800">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1" for="profNextFollowup">Next Follow-Up Date &amp; Time</label>
+                        <input type="datetime-local" id="profNextFollowup" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs text-slate-800 font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1" for="profDealValue">Estimated Deal Value (₹)</label>
+                        <input type="number" id="profDealValue" placeholder="e.g. 75000" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs text-slate-800 font-mono">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 mb-1" for="profSalesNotes">Internal Sales &amp; Engineering Remarks</label>
+                    <textarea id="profSalesNotes" rows="2" placeholder="Enter follow-up outcome or technical sizing comments..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800"></textarea>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button onclick="saveProfileChanges()" class="flex-1 py-2.5 rounded-xl bg-wecare-blue hover:bg-wecare-darkblue text-white text-xs font-bold transition-all shadow-md">
+                        Update Lead Profile
+                    </button>
+                    <button id="profDeleteBtn" onclick="deleteActiveLead()" class="py-2.5 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-700 text-xs font-bold transition-all border border-rose-200" title="Delete Lead (Manager / Admin)">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Instant WhatsApp Template Dispatcher -->
+            <div class="p-4 bg-emerald-50/70 rounded-2xl border border-emerald-200 mb-4 space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-emerald-800 flex items-center gap-1.5">
+                        <i data-lucide="message-circle" class="w-4 h-4 text-emerald-600"></i>
+                        Launch WhatsApp With Template
+                    </span>
+                    <select id="waTemplatePicker" onchange="previewWaTemplate()" class="bg-white border border-emerald-200 rounded-lg px-2 py-1 text-[11px] font-semibold text-emerald-800">
+                        <option value="tpl_new_quotation">New Quotation</option>
+                        <option value="tpl_dealer_registration">Dealer Registration</option>
+                        <option value="tpl_water_testing">Water Testing</option>
+                        <option value="tpl_followup_reminder">Follow-up Reminder</option>
+                        <option value="tpl_quotation_sent">Quotation Sent</option>
+                        <option value="tpl_feedback_request">Feedback Request</option>
+                    </select>
+                </div>
+                <p id="waPreviewText" class="text-xs text-slate-700 bg-white p-2.5 rounded-xl border border-emerald-100 font-mono italic"></p>
+                <button onclick="launchWhatsAppWithTemplate()" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm transition-all">
+                    <i data-lucide="external-link" class="w-4 h-4"></i>
+                    <span>Open Customer WhatsApp Chat</span>
+                </button>
+            </div>
+
+            <!-- Activity Log & History -->
+            <div class="space-y-2">
+                <div class="text-xs font-bold text-slate-700">Audit Trail &amp; Follow-up History</div>
+                <div id="profActivityLogs" class="space-y-1.5 max-h-40 overflow-y-auto pr-1 text-xs font-mono">
+                    <!-- Logs injected -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. LOG NEW MANUAL LEAD MODAL -->
+    <div id="newLeadModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+        <div class="bg-white max-w-lg w-full rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-200 relative animate-in fade-in">
+            <button onclick="closeNewLeadModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-2">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <div class="mb-4">
+                <h3 class="text-lg font-extrabold text-slate-900">Record Walk-in / Phone Lead</h3>
+                <p class="text-xs text-slate-500">Save incoming client inquiry directly into SQLite database</p>
+            </div>
+            <form onsubmit="handleManualLeadSubmit(event)" class="space-y-3">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" for="mType">Inquiry Type</label>
+                        <select id="mType" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800">
+                            <option value="quote">Price / Capacity Quote</option>
+                            <option value="dealer">Dealer Application</option>
+                            <option value="water_test">Water Testing</option>
+                            <option value="contact">General Inquiry</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" for="mName">Customer Name *</label>
+                        <input type="text" id="mName" required placeholder="Full Name" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" for="mPhone">Phone Number *</label>
+                        <input type="tel" id="mPhone" required placeholder="+91 92165 45210" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" for="mEmail">Email</label>
+                        <input type="email" id="mEmail" placeholder="client@domain.com" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 font-mono">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" for="mCity">City / State</label>
+                        <input type="text" id="mCity" placeholder="City, State" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" for="mSize">Requested Size</label>
+                        <select id="mSize" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 font-mono">
+                            <option value="Size 33 × 450">Size 33 × 450 (1,500 LPH)</option>
+                            <option value="Size 33 × 600">Size 33 × 600 (2,000 LPH)</option>
+                            <option value="Size 33 × 750">Size 33 × 750 (3,000 LPH)</option>
+                            <option value="Size 33 × 900">Size 33 × 900 (4,000 LPH)</option>
+                            <option value="Size 40 × 750">Size 40 × 750 (5,000 LPH)</option>
+                            <option value="Size 40 × 900">Size 40 × 900 (7,000 LPH)</option>
+                            <option value="Size 75 × 750">Size 75 × 750 (10,000-12,000 LPH)</option>
+                            <option value="Size 75 × 900">Size 75 × 900 (12,000-14,000 LPH)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" for="mPriority">Priority</label>
+                        <select id="mPriority" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800">
+                            <option value="MEDIUM">Medium</option>
+                            <option value="HIGH">High</option>
+                            <option value="URGENT">Urgent</option>
+                            <option value="LOW">Low</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" for="mAssigned">Assign To</label>
+                        <input type="text" id="mAssigned" placeholder="Executive Name" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1" for="mNotes">Client Requirement / Remarks</label>
+                    <textarea id="mNotes" rows="2" placeholder="Notes from phone conversation..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800"></textarea>
+                </div>
+
+                <button type="submit" class="w-full py-3 rounded-xl bg-wecare-blue hover:bg-wecare-darkblue text-white font-bold text-xs uppercase tracking-wider transition-all shadow-md">
+                    Save to CRM Database
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3. ADD USER MODAL (SUPER ADMIN ONLY) -->
+    <div id="addUserModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+        <div class="bg-white max-w-md w-full rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-200 relative animate-in fade-in">
+            <button onclick="closeAddUserModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-2">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <div class="mb-4">
+                <h3 class="text-lg font-extrabold text-slate-900">Add Sales Team Member</h3>
+                <p class="text-xs text-slate-500">Create an authorized CRM account with role-based access control</p>
+            </div>
+            <form onsubmit="handleAddUserSubmit(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1" for="uFullName">Full Name *</label>
+                    <input type="text" id="uFullName" required placeholder="Staff Full Name" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1" for="uUsername">Username *</label>
+                    <input type="text" id="uUsername" required placeholder="e.g. jsharma" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 font-mono">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1" for="uEmail">Email Address *</label>
+                    <input type="email" id="uEmail" required placeholder="staff@wecare.com" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 font-mono">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1" for="uRole">Role *</label>
+                    <select id="uRole" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 font-bold">
+                        <option value="SALES_EXECUTIVE">Sales Executive (Standard CRM Access)</option>
+                        <option value="SALES_MANAGER">Sales Manager (Lead Assignment &amp; Reports)</option>
+                        <option value="SUPER_ADMIN">Super Admin (Full Administrative Authority)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1" for="uPassword">Temporary Password *</label>
+                    <input type="password" id="uPassword" required placeholder="Minimum 8 characters" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 font-mono">
+                </div>
+                <button type="submit" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-md">
+                    Create User Account
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT CRM LOGIC -->
+    <script>
+        let currentUser = null;
+        let authToken = localStorage.getItem('wecare_token');
+        let currentLeads = [];
+        let activeProfileLead = null;
+        let templates = {};
+        let draggedLeadId = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            checkAuth();
+        });
+
+        // Toggle mobile sidebar drawer
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobileSidebarOverlay');
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        async function checkAuth() {
+            if (!authToken) {
+                showLoginScreen();
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/auth/me', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.authenticated) {
+                        currentUser = data.user;
+                        initAuthenticatedUI();
+                    } else {
+                        showLoginScreen();
+                    }
+                } else {
+                    showLoginScreen();
+                }
+            } catch (err) {
+                showLoginScreen();
+            }
+        }
+
+        function showLoginScreen() {
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('appContainer').classList.add('hidden');
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true;
+
+            const u = document.getElementById('loginUsername').value.trim();
+            const p = document.getElementById('loginPassword').value;
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: u, password: p })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    authToken = data.token;
+                    localStorage.setItem('wecare_token', authToken);
+                    currentUser = data.user;
+                    document.getElementById('loginScreen').classList.add('hidden');
+                    document.getElementById('loginError').classList.add('hidden');
+                    initAuthenticatedUI();
+                } else {
+                    document.getElementById('loginError').classList.remove('hidden');
+                    document.getElementById('loginErrorMsg').innerText = data.error || 'Invalid credentials. Please verify your login details.';
+                }
+            } catch (err) {
+                document.getElementById('loginError').classList.remove('hidden');
+                document.getElementById('loginErrorMsg').innerText = 'Server connection error. Please try again.';
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function handleLogout() {
+            try {
+                await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+            } catch (e) {}
+            localStorage.removeItem('wecare_token');
+            authToken = null;
+            currentUser = null;
+            showLoginScreen();
+        }
+
+        function initAuthenticatedUI() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('appContainer').classList.remove('hidden');
+
+            document.getElementById('userDisplayName').innerText = currentUser.fullName || currentUser.username;
+            document.getElementById('userAvatar').innerText = (currentUser.fullName || currentUser.username)[0].toUpperCase();
+            document.getElementById('roleBadge').innerText = (currentUser.role || '').replace('_', ' ');
+
+            // Role permissions
+            if (currentUser.role === 'SUPER_ADMIN') {
+                document.getElementById('nav-users').classList.remove('hidden');
+            } else {
+                document.getElementById('nav-users').classList.add('hidden');
+            }
+
+            // Set up client-side URL routing
+            window.addEventListener('popstate', () => {
+                navigateAdmin(window.location.pathname, null, false);
+            });
+
+            // Initial route from URL
+            const initialPath = window.location.pathname;
+            navigateAdmin(initialPath, null, false);
+
+            loadStats();
+            loadTemplates();
+
+            // Periodic metrics refresh
+            setInterval(() => {
+                loadStats();
+            }, 30000);
+        }
+
+        // CLIENT-SIDE ROUTER FOR ADMIN PORTAL
+        function navigateAdmin(path, event, pushState = true) {
+            if (event) event.preventDefault();
+
+            // Close mobile drawer if open
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobileSidebarOverlay');
+            if (sidebar) sidebar.classList.add('-translate-x-full');
+            if (overlay) overlay.classList.add('hidden');
+
+            // Map paths to view keys
+            let view = 'dashboard';
+            let title = 'Sales Dashboard';
+            let breadcrumb = 'DASHBOARD';
+
+            if (path.includes('/admin/pipeline')) {
+                view = 'pipeline';
+                title = 'Sales Pipeline Kanban';
+                breadcrumb = 'PIPELINE';
+            } else if (path.includes('/admin/leads')) {
+                view = 'leads';
+                title = 'All Leads Directory';
+                breadcrumb = 'LEADS';
+            } else if (path.includes('/admin/dealers')) {
+                view = 'dealers';
+                title = 'Dealer & Distributor Network';
+                breadcrumb = 'DEALERS';
+            } else if (path.includes('/admin/follow-ups')) {
+                view = 'followups';
+                title = 'Follow-Up Command Centre';
+                breadcrumb = 'FOLLOW-UPS';
+            } else if (path.includes('/admin/reports')) {
+                view = 'reports';
+                title = 'Reports & Demand Intelligence';
+                breadcrumb = 'REPORTS';
+            } else if (path.includes('/admin/templates')) {
+                view = 'templates';
+                title = 'WhatsApp Customer Templates';
+                breadcrumb = 'TEMPLATES';
+            } else if (path.includes('/admin/settings')) {
+                view = 'settings';
+                title = 'System & Integration Settings';
+                breadcrumb = 'SETTINGS';
+            } else if (path.includes('/admin/users')) {
+                view = 'users';
+                title = 'Authorized Users & Roles';
+                breadcrumb = 'TEAM';
+            } else {
+                path = '/admin/dashboard';
+            }
+
+            // Update URL without page reload
+            if (pushState && window.location.pathname !== path) {
+                history.pushState(null, '', path);
+            }
+
+            // Update Titles
+            const titleEl = document.getElementById('pageTitle');
+            const breadcrumbEl = document.getElementById('breadcrumbSection');
+            if (titleEl) titleEl.innerText = title;
+            if (breadcrumbEl) breadcrumbEl.innerText = breadcrumb;
+
+            // Update View Visibility
+            document.querySelectorAll('.admin-view').forEach(el => el.classList.add('hidden'));
+            const activeViewEl = document.getElementById(`view-${view}`);
+            if (activeViewEl) activeViewEl.classList.remove('hidden');
+
+            // Update Sidebar Active state
+            document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
+            const activeNavEl = document.getElementById(`nav-${view}`);
+            if (activeNavEl) activeNavEl.classList.add('active');
+
+            // Load view-specific data
+            if (view === 'dashboard') { loadStats(); loadDashboardRecentLeads(); }
+            if (view === 'pipeline') loadKanban();
+            if (view === 'leads') loadLeadsTable();
+            if (view === 'dealers') loadDealersTable();
+            if (view === 'followups') loadFollowupsView();
+            if (view === 'reports') loadReports();
+            if (view === 'templates') loadTemplates();
+            if (view === 'users') loadUsers();
+
+            lucide.createIcons();
+        }
+
+        // Backward compatibility for existing onclick callers
+        function switchTab(tab) {
+            navigateAdmin(`/admin/${tab === 'team' ? 'users' : tab}`);
+        }
+
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/stats', { headers: { 'Authorization': `Bearer ${authToken}` } });
+                const data = await res.json();
+                if (data.success) {
+                    const s = data.stats;
+                    document.getElementById('statTotal').innerText = s.total;
+                    document.getElementById('statNewToday').innerText = s.new_today;
+                    document.getElementById('statPendingFollowups').innerText = s.pending_followups;
+                    document.getElementById('statConversion').innerText = s.conversion_rate;
+                    document.getElementById('statQuotes').innerText = s.quotes;
+                    document.getElementById('statDealers').innerText = s.dealers;
+                    document.getElementById('statQualified').innerText = s.qualified;
+                    document.getElementById('statClosed').innerText = s.closed;
+
+                    if (document.getElementById('navLeadsCount')) document.getElementById('navLeadsCount').innerText = s.total;
+                    if (document.getElementById('navDealersCount')) document.getElementById('navDealersCount').innerText = s.dealers;
+
+                    if (s.overdue_followups > 0) {
+                        document.getElementById('overdueAlertBtn').classList.remove('hidden');
+                        document.getElementById('overdueCountText').innerText = `${s.overdue_followups} Overdue Follow-ups!`;
+                        document.getElementById('statOverdueText').innerText = `${s.overdue_followups} Overdue Now!`;
+                        if (document.getElementById('navFollowupsBadge')) {
+                            document.getElementById('navFollowupsBadge').classList.remove('hidden');
+                            document.getElementById('navFollowupsBadge').innerText = s.overdue_followups;
+                        }
+                    } else {
+                        document.getElementById('overdueAlertBtn').classList.add('hidden');
+                        document.getElementById('statOverdueText').innerText = `0 Overdue`;
+                        if (document.getElementById('navFollowupsBadge')) document.getElementById('navFollowupsBadge').classList.add('hidden');
+                    }
+
+                    // Progress bars
+                    const stages = ['NEW', 'IN_REVIEW', 'CONTACTED', 'QUALIFIED', 'CLOSED'];
+                    const stageNames = { 'NEW': 'New Leads', 'IN_REVIEW': 'In Technical Review', 'CONTACTED': 'Contacted / Engaged', 'QUALIFIED': 'Technically Qualified', 'CLOSED': 'Deals Closed / Shipped' };
+                    const progressHTML = stages.map(st => {
+                        const count = s.stage_counts[st] || 0;
+                        const pct = s.total > 0 ? (count / s.total * 100).toFixed(0) : 0;
+                        return `
+                            <div>
+                                <div class="flex justify-between text-xs font-bold mb-1">
+                                    <span class="text-slate-700">${stageNames[st]}</span>
+                                    <span class="text-slate-500 font-mono">${count} (${pct}%)</span>
+                                </div>
+                                <div class="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
+                                    <div class="h-full bg-wecare-blue rounded-full" style="width: ${pct}%"></div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                    document.getElementById('stageProgressBars').innerHTML = progressHTML;
+
+                    // Lead sources
+                    const sourceHTML = Object.entries(s.sources || {}).map(([src, cnt]) => `
+                        <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 text-xs">
+                            <span class="font-bold text-slate-700">${src}</span>
+                            <span class="font-mono font-bold px-2 py-0.5 rounded-full bg-white border border-slate-200 text-slate-800">${cnt}</span>
+                        </div>
+                    `).join('');
+                    document.getElementById('sourceDistribution').innerHTML = sourceHTML || '<div class="text-xs text-slate-400">No source data yet</div>';
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function loadDashboardRecentLeads() {
+            try {
+                const res = await fetch('/api/leads?limit=6', { headers: { 'Authorization': `Bearer ${authToken}` } });
+                const data = await res.json();
+                if (data.success) {
+                    const tbody = document.getElementById('dashboardRecentLeads');
+                    if (!tbody) return;
+                    tbody.innerHTML = (data.leads || []).slice(0, 6).map(l => `
+                        <tr class="hover:bg-slate-50/70 transition-all cursor-pointer" onclick="openProfileModal(${l.id})">
+                            <td class="py-2.5 px-3 font-bold text-wecare-blue">${l.ref_code}</td>
+                            <td class="py-2.5 px-3">
+                                <div class="font-bold text-slate-800">${l.full_name}</div>
+                                <div class="text-[10px] text-slate-400">${l.city || 'Unspecified'}</div>
+                            </td>
+                            <td class="py-2.5 px-3 text-slate-600">${l.selected_size || 'Custom'}</td>
+                            <td class="py-2.5 px-3">
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-sky-800">${l.stage || 'NEW'}</span>
+                            </td>
+                            <td class="py-2.5 px-3 text-right">
+                                <button onclick="event.stopPropagation(); openProfileModal(${l.id})" class="p-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600">
+                                    <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                    lucide.createIcons();
+                }
+            } catch (e) {}
+        }
+
+        async function loadKanban() {
+            try {
+                const res = await fetch('/api/leads', { headers: { 'Authorization': `Bearer ${authToken}` } });
+                const data = await res.json();
+                if (data.success) {
+                    currentLeads = data.leads;
+                    renderKanban(data.leads);
+                }
+            } catch (e) {}
+        }
+
+        function renderKanban(leads) {
+            const stages = ['NEW', 'IN_REVIEW', 'CONTACTED', 'QUALIFIED', 'CLOSED'];
+            stages.forEach(st => {
+                const col = document.getElementById(`kanban-${st}`);
+                if (col) col.innerHTML = '';
+                const cnt = document.getElementById(`kCount-${st}`);
+                if (cnt) cnt.innerText = '0';
+            });
+
+            const counts = { 'NEW': 0, 'IN_REVIEW': 0, 'CONTACTED': 0, 'QUALIFIED': 0, 'CLOSED': 0 };
+
+            leads.forEach(lead => {
+                const stage = lead.stage || lead.status || 'NEW';
+                if (!counts.hasOwnProperty(stage)) counts[stage] = 0;
+                counts[stage]++;
+
+                const isOverdue = lead.next_followup_at && new Date(lead.next_followup_at) < new Date() && stage !== 'CLOSED';
+                const pColors = {
+                    'URGENT': 'bg-rose-100 text-rose-800 border-rose-200',
+                    'HIGH': 'bg-amber-100 text-amber-800 border-amber-200',
+                    'MEDIUM': 'bg-sky-100 text-sky-800 border-sky-200',
+                    'LOW': 'bg-slate-100 text-slate-700 border-slate-200'
+                };
+                const priorityBadge = pColors[lead.priority] || pColors['MEDIUM'];
+
+                const cleanDigits = (lead.phone || '').replace(/[^0-9]/g, '');
+                const waLink = `https://wa.me/${cleanDigits}`;
+
+                const card = document.createElement('div');
+                card.className = `p-3 bg-white rounded-xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all cursor-grab active:cursor-grabbing space-y-2 select-none ${isOverdue ? 'ring-2 ring-rose-400' : ''}`;
+                card.draggable = true;
+                card.ondragstart = (e) => handleDragStart(e, lead.id);
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-mono font-bold text-wecare-blue">${lead.ref_code}</span>
+                        <span class="text-[9px] font-bold px-2 py-0.5 rounded-full border ${priorityBadge}">${lead.priority || 'MEDIUM'}</span>
+                    </div>
+
+                    <div>
+                        <div class="font-bold text-slate-900 text-xs truncate">${lead.full_name}</div>
+                        <div class="text-[10px] text-slate-500 truncate">${lead.business_name ? `${lead.business_name} &bull; ` : ''}${lead.city || 'Location unverified'}</div>
+                    </div>
+
+                    <div class="p-1.5 rounded-lg bg-sky-50/70 border border-sky-100 text-[10px] font-mono text-slate-700 flex justify-between items-center">
+                        <span class="font-bold truncate">${lead.selected_size || 'Custom Size'}</span>
+                        <span class="text-[9px] text-wecare-blue font-bold">${lead.flow_rate || ''}</span>
+                    </div>
+
+                    ${isOverdue ? `
+                        <div class="text-[10px] font-bold text-rose-600 flex items-center gap-1 bg-rose-50 p-1 rounded-lg">
+                            <i data-lucide="alert-triangle" class="w-3 h-3"></i>
+                            <span>Follow-up Overdue!</span>
+                        </div>
+                    ` : (lead.next_followup_at ? `
+                        <div class="text-[10px] text-slate-500 font-mono">
+                            📅 ${new Date(lead.next_followup_at).toLocaleDateString()}
+                        </div>
+                    ` : '')}
+
+                    <div class="pt-1.5 border-t border-slate-100 flex items-center justify-between">
+                        <span class="text-[10px] text-slate-400 truncate max-w-[100px]">${lead.assigned_to || 'Unassigned'}</span>
+                        <div class="flex items-center gap-1">
+                            <a href="${waLink}" target="_blank" onclick="event.stopPropagation()" class="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100" title="WhatsApp Customer">
+                                <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+                            </a>
+                            <button onclick="openProfileModal(${lead.id})" class="p-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200" title="View Full Profile">
+                                <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                card.onclick = () => openProfileModal(lead.id);
+                const col = document.getElementById(`kanban-${stage}`);
+                if (col) col.appendChild(card);
+            });
+
+            stages.forEach(st => {
+                const el = document.getElementById(`kCount-${st}`);
+                if (el) el.innerText = counts[st] || 0;
+            });
+            lucide.createIcons();
+        }
+
+        function handleDragStart(e, id) {
+            draggedLeadId = id;
+            e.dataTransfer.setData('text/plain', id);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        async function handleDrop(e, targetStage) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            if (!draggedLeadId) return;
+
+            try {
+                const res = await fetch(`/api/leads/${draggedLeadId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ stage: targetStage, log_action: 'STAGE_MOVED_KANBAN' })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    loadKanban();
+                    loadStats();
+                }
+            } catch (err) {
+                alert('Connection error updating stage');
+            } finally {
+                draggedLeadId = null;
+            }
+        }
+
+        async function loadLeadsTable() {
+            const search = document.getElementById('leadSearch') ? document.getElementById('leadSearch').value : '';
+            const type = document.getElementById('leadTypeFilter') ? document.getElementById('leadTypeFilter').value : 'all';
+            const stage = document.getElementById('leadStageFilter') ? document.getElementById('leadStageFilter').value : 'all';
+            const priority = document.getElementById('leadPriorityFilter') ? document.getElementById('leadPriorityFilter').value : 'all';
+
+            const query = new URLSearchParams({ search, type, stage, priority });
+
+            try {
+                const res = await fetch(`/api/leads?${query.toString()}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    renderTableRows(data.leads);
+                }
+            } catch (e) {}
+        }
+
+        function renderTableRows(leads) {
+            const tbody = document.getElementById('leadsTableBody');
+            if (!tbody) return;
+            if (!leads || leads.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-slate-400">No matching leads found</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = leads.map(l => {
+                const cleanDigits = (l.phone || '').replace(/[^0-9]/g, '');
+                return `
+                    <tr class="hover:bg-slate-50/70 transition-all cursor-pointer" onclick="openProfileModal(${l.id})">
+                        <td class="py-3 px-5">
+                            <span class="font-mono font-bold text-wecare-blue">${l.ref_code}</span>
+                            <div class="text-[10px] text-slate-400 font-mono">${new Date(l.created_at).toLocaleDateString()}</div>
+                        </td>
+                        <td class="py-3 px-5">
+                            <div class="font-bold text-slate-800">${l.full_name}</div>
+                            <div class="text-[11px] text-slate-500">${l.city || 'Unspecified'} &bull; <span class="font-mono">${l.phone}</span></div>
+                        </td>
+                        <td class="py-3 px-5 font-mono">
+                            <div class="font-bold text-slate-700">${l.selected_size || 'Custom Size'}</div>
+                            <div class="text-[10px] text-slate-400">${l.flow_rate || ''}</div>
+                        </td>
+                        <td class="py-3 px-5">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">${l.priority || 'MEDIUM'}</span>
+                            <div class="text-[10px] text-slate-500 font-mono mt-0.5">${l.next_followup_at ? new Date(l.next_followup_at).toLocaleDateString() : 'No date'}</div>
+                        </td>
+                        <td class="py-3 px-5">
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold font-mono bg-sky-100 text-sky-800">${l.stage || 'NEW'}</span>
+                        </td>
+                        <td class="py-3 px-5 text-right" onclick="event.stopPropagation()">
+                            <div class="flex items-center justify-end gap-1.5">
+                                <a href="https://wa.me/${cleanDigits}" target="_blank" class="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100" title="WhatsApp">
+                                    <i data-lucide="message-circle" class="w-4 h-4"></i>
+                                </a>
+                                <a href="tel:${l.phone}" class="p-1.5 rounded-lg bg-sky-50 text-wecare-blue hover:bg-sky-100" title="Call">
+                                    <i data-lucide="phone" class="w-4 h-4"></i>
+                                </a>
+                                <button onclick="openProfileModal(${l.id})" class="p-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200">
+                                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        async function loadDealersTable() {
+            try {
+                const res = await fetch('/api/leads?type=dealer', { headers: { 'Authorization': `Bearer ${authToken}` } });
+                const data = await res.json();
+                if (data.success) {
+                    const tbody = document.getElementById('dealersTableBody');
+                    if (!tbody) return;
+                    document.getElementById('dealerTotalBadge').innerText = data.leads.length;
+
+                    if (data.leads.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-slate-400">No dealer applications logged yet</td></tr>`;
+                        return;
+                    }
+
+                    tbody.innerHTML = data.leads.map(d => {
+                        const cleanDigits = (d.phone || '').replace(/[^0-9]/g, '');
+                        return `
+                            <tr class="hover:bg-slate-50/70 transition-all cursor-pointer" onclick="openProfileModal(${d.id})">
+                                <td class="py-3 px-5 font-bold text-wecare-blue">${d.ref_code}</td>
+                                <td class="py-3 px-5">
+                                    <div class="font-bold text-slate-800">${d.business_name || 'Individual Partnership'}</div>
+                                    <div class="text-[11px] text-slate-500 font-sans">${d.full_name} &bull; ${d.phone}</div>
+                                </td>
+                                <td class="py-3 px-5 font-sans">${d.city || 'State Unverified'}</td>
+                                <td class="py-3 px-5">${d.notes || '10 - 20 Units / Mo'}</td>
+                                <td class="py-3 px-5">
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">${d.stage || 'NEW'}</span>
+                                </td>
+                                <td class="py-3 px-5 text-right" onclick="event.stopPropagation()">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <a href="https://wa.me/${cleanDigits}" target="_blank" class="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100">
+                                            <i data-lucide="message-circle" class="w-4 h-4"></i>
+                                        </a>
+                                        <button onclick="openProfileModal(${d.id})" class="p-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200">
+                                            <i data-lucide="eye" class="w-4 h-4"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                    lucide.createIcons();
+                }
+            } catch (e) {}
+        }
+
+        async function loadFollowupsView() {
+            try {
+                const res = await fetch('/api/leads', { headers: { 'Authorization': `Bearer ${authToken}` } });
+                const data = await res.json();
+                if (data.success) {
+                    const now = new Date();
+                    const overdue = [];
+                    const scheduled = [];
+
+                    data.leads.forEach(l => {
+                        if (l.next_followup_at && l.stage !== 'CLOSED') {
+                            const fDate = new Date(l.next_followup_at);
+                            if (fDate < now) {
+                                overdue.push(l);
+                            } else {
+                                scheduled.push(l);
+                            }
+                        }
+                    });
+
+                    document.getElementById('overdueBadgeCount').innerText = overdue.length;
+                    document.getElementById('scheduledBadgeCount').innerText = scheduled.length;
+
+                    const overContainer = document.getElementById('overdueCardsContainer');
+                    if (overdue.length === 0) {
+                        overContainer.innerHTML = '<div class="col-span-full py-4 text-center text-xs text-slate-400 italic">No overdue follow-ups! All client communications are up to date.</div>';
+                    } else {
+                        overContainer.innerHTML = overdue.map(o => createFollowupCard(o, true)).join('');
+                    }
+
+                    const schedContainer = document.getElementById('scheduledCardsContainer');
+                    if (scheduled.length === 0) {
+                        schedContainer.innerHTML = '<div class="col-span-full py-4 text-center text-xs text-slate-400 italic">No upcoming follow-ups scheduled. Use the profile modal to schedule one.</div>';
+                    } else {
+                        schedContainer.innerHTML = scheduled.map(s => createFollowupCard(s, false)).join('');
+                    }
+                    lucide.createIcons();
+                }
+            } catch (e) {}
+        }
+
+        function createFollowupCard(l, isOverdue) {
+            const cleanDigits = (l.phone || '').replace(/[^0-9]/g, '');
+            return `
+                <div class="p-4 bg-white rounded-2xl border ${isOverdue ? 'border-rose-300 ring-1 ring-rose-300 shadow-sm' : 'border-slate-200/80 shadow-xs'} space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-mono font-bold text-wecare-blue">${l.ref_code}</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${isOverdue ? 'bg-rose-100 text-rose-800' : 'bg-sky-100 text-sky-800'}">
+                            ${isOverdue ? 'OVERDUE' : 'SCHEDULED'}
+                        </span>
+                    </div>
+
+                    <div>
+                        <div class="font-bold text-slate-900 text-xs">${l.full_name}</div>
+                        <div class="text-[11px] text-slate-500 font-mono">${l.phone} &bull; ${l.city || 'Location unverified'}</div>
+                    </div>
+
+                    <div class="text-xs font-mono text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-100">
+                        <div>Size: <strong>${l.selected_size || 'Custom'}</strong></div>
+                        <div class="text-[11px] text-slate-400 mt-0.5">📅 ${new Date(l.next_followup_at).toLocaleString()}</div>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                        <a href="https://wa.me/${cleanDigits}" target="_blank" class="flex-1 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-[11px] font-bold flex items-center justify-center gap-1">
+                            <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+                            <span>WhatsApp</span>
+                        </a>
+                        <button onclick="openProfileModal(${l.id})" class="flex-1 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px] font-bold flex items-center justify-center gap-1">
+                            <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                            <span>Update</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function openProfileModal(id) {
+            try {
+                const res = await fetch(`/api/leads/${id}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    activeProfileLead = data.lead;
+                    const l = data.lead;
+
+                    document.getElementById('profRefCode').innerText = l.ref_code;
+                    document.getElementById('profStageBadge').innerText = l.stage || 'NEW';
+                    document.getElementById('profDate').innerText = `Created: ${l.created_at}`;
+                    document.getElementById('profName').innerText = l.full_name;
+                    document.getElementById('profCompany').innerText = l.business_name ? `${l.business_name} (${l.business_type || 'Commercial'})` : 'Individual Inquiry';
+                    document.getElementById('profLocation').innerText = `${l.city || ''} ${l.state || ''}`.trim() || 'Unspecified';
+                    document.getElementById('profPhone').innerText = l.phone;
+                    document.getElementById('profEmail').innerText = l.email || 'None';
+
+                    document.getElementById('profSize').innerText = l.selected_size || 'N/A';
+                    document.getElementById('profFlow').innerText = l.flow_rate || 'N/A';
+                    document.getElementById('profHardness').innerText = l.water_hardness || 'Unverified';
+                    document.getElementById('profTds').innerText = l.raw_water_tds || 'Unverified';
+                    document.getElementById('profNotes').innerText = l.notes || 'None';
+
+                    document.getElementById('profStageSelect').value = l.stage || 'NEW';
+                    document.getElementById('profPrioritySelect').value = l.priority || 'MEDIUM';
+                    document.getElementById('profAssignedInput').value = l.assigned_to || '';
+                    document.getElementById('profNextFollowup').value = l.next_followup_at ? l.next_followup_at.replace(' ', 'T') : '';
+                    document.getElementById('profDealValue').value = l.deal_value || '';
+                    document.getElementById('profSalesNotes').value = '';
+
+                    // Activity logs
+                    const logsHTML = (data.activity_logs || []).map(lg => `
+                        <div class="p-2 bg-slate-50 rounded-lg border border-slate-100 flex items-start gap-2">
+                            <i data-lucide="activity" class="w-3.5 h-3.5 text-wecare-blue shrink-0 mt-0.5"></i>
+                            <div>
+                                <div class="font-bold text-slate-800">${lg.action} <span class="text-slate-400 font-normal">by ${lg.user_name || 'System'}</span></div>
+                                <div class="text-slate-600">${lg.details || ''}</div>
+                                <div class="text-[9px] text-slate-400">${lg.created_at}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                    document.getElementById('profActivityLogs').innerHTML = logsHTML || '<div class="text-slate-400 italic">No activity entries yet.</div>';
+
+                    previewWaTemplate();
+                    const canDelete = currentUser && (currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'SALES_MANAGER');
+                    const delBtn = document.getElementById('profDeleteBtn');
+                    if (delBtn) delBtn.style.display = canDelete ? 'inline-flex' : 'none';
+
+                    document.getElementById('profileModal').classList.remove('hidden');
+                    lucide.createIcons();
+                }
+            } catch (e) {
+                alert('Failed to load lead details');
+            }
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profileModal').classList.add('hidden');
+            activeProfileLead = null;
+        }
+
+        async function deleteActiveLead() {
+            if (!activeProfileLead) return;
+            if (!confirm(`Are you sure you want to permanently delete lead #${activeProfileLead.id} (${activeProfileLead.ref_code})? This cannot be undone.`)) {
+                return;
+            }
+            try {
+                const res = await fetch(`/api/leads/${activeProfileLead.id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.message || 'Lead deleted successfully.');
+                    closeProfileModal();
+                    loadLeads();
+                    loadPipeline();
+                    loadDashboardStats();
+                } else {
+                    alert(data.error || 'Failed to delete lead.');
+                }
+            } catch (e) {
+                alert('Network error while deleting lead.');
+            }
+        }
+
+        async function saveProfileChanges() {
+            if (!activeProfileLead) return;
+
+            const payload = {
+                stage: document.getElementById('profStageSelect').value,
+                priority: document.getElementById('profPrioritySelect').value,
+                assigned_to: document.getElementById('profAssignedInput').value.trim(),
+                next_followup_at: document.getElementById('profNextFollowup').value.replace('T', ' '),
+                deal_value: document.getElementById('profDealValue').value ? parseFloat(document.getElementById('profDealValue').value) : null,
+                sales_notes: document.getElementById('profSalesNotes').value.trim()
+            };
+
+            try {
+                const res = await fetch(`/api/leads/${activeProfileLead.id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('Lead profile updated successfully!');
+                    closeProfileModal();
+                    loadKanban();
+                    loadLeadsTable();
+                    loadStats();
+                } else {
+                    alert(data.error);
+                }
+            } catch (e) {
+                alert('Failed to save changes');
+            }
+        }
+
+        function previewWaTemplate() {
+            if (!activeProfileLead) return;
+            const key = document.getElementById('waTemplatePicker').value;
+            let raw = templates[key] || "Hello {customer_name}, regarding {product_size} (Ref: {ref_code}).";
+            const replaced = raw.replace(/{customer_name}/g, activeProfileLead.full_name)
+                                .replace(/{ref_code}/g, activeProfileLead.ref_code)
+                                .replace(/{product_size}/g, activeProfileLead.selected_size || 'our Scale Removers')
+                                .replace(/{business_name}/g, activeProfileLead.business_name || 'your firm')
+                                .replace(/{city}/g, activeProfileLead.city || 'your area');
+            document.getElementById('waPreviewText').innerText = replaced;
+        }
+
+        function launchWhatsAppWithTemplate() {
+            if (!activeProfileLead) return;
+            const text = document.getElementById('waPreviewText').innerText;
+            const cleanDigits = (activeProfileLead.phone || '').replace(/[^0-9]/g, '');
+            const url = `https://wa.me/${cleanDigits}?text=${encodeURIComponent(text)}`;
+            window.open(url, '_blank');
+        }
+
+        async function loadReports() {
+            try {
+                const res = await fetch('/api/reports', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('reportProductDemand').innerHTML = data.product_demand.map(p => `
+                        <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 text-xs font-mono">
+                            <span class="font-bold text-slate-800">${p.size}</span>
+                            <span class="font-bold px-2 py-0.5 rounded-full bg-sky-100 text-wecare-blue">${p.count} Enquiries</span>
+                        </div>
+                    `).join('');
+
+                    document.getElementById('reportCityDemand').innerHTML = data.city_leads.map(c => `
+                        <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 text-xs font-mono">
+                            <span class="font-bold text-slate-800">${c.city}</span>
+                            <span class="font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">${c.count} Leads</span>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {}
+        }
+
+        async function loadTemplates() {
+            try {
+                const res = await fetch('/api/templates', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    templates = data.templates;
+                    for (const [k, v] of Object.entries(templates)) {
+                        const el = document.getElementById(k);
+                        if (el) el.value = v;
+                    }
+                }
+            } catch (e) {}
+        }
+
+        async function saveTemplates() {
+            const payload = {};
+            ['tpl_new_quotation', 'tpl_dealer_registration', 'tpl_water_testing', 'tpl_followup_reminder', 'tpl_quotation_sent', 'tpl_feedback_request'].forEach(k => {
+                const el = document.getElementById(k);
+                if (el) payload[k] = el.value;
+            });
+
+            try {
+                const res = await fetch('/api/templates', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('Templates saved successfully!');
+                    templates = payload;
+                } else {
+                    alert(data.error);
+                }
+            } catch (e) {
+                alert('Save failed');
+            }
+        }
+
+        async function saveNotificationSettings() {
+            const payload = {
+                smtp_host: document.getElementById('setting_smtp_host').value,
+                smtp_port: document.getElementById('setting_smtp_port').value,
+                notify_email: document.getElementById('setting_notify_email').value
+            };
+            try {
+                const res = await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) alert('Settings saved successfully!');
+            } catch (e) {
+                alert('Failed to save settings');
+            }
+        }
+
+        async function loadUsers() {
+            try {
+                const res = await fetch('/api/users', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('usersTableBody').innerHTML = data.users.map(u => `
+                        <tr>
+                            <td class="py-2.5 px-4 font-bold text-slate-800">${u.full_name}</td>
+                            <td class="py-2.5 px-4">${u.username}</td>
+                            <td class="py-2.5 px-4">${u.email || 'N/A'}</td>
+                            <td class="py-2.5 px-4 font-bold text-wecare-blue">${u.role}</td>
+                            <td class="py-2.5 px-4">
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${u.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
+                                    ${u.is_active ? 'ACTIVE' : 'INACTIVE'}
+                                </span>
+                            </td>
+                            <td class="py-2.5 px-4 text-right space-x-1">
+                                <button onclick="toggleUserStatus(${u.id}, ${u.is_active})" class="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-semibold" title="Toggle active status">
+                                    ${u.is_active ? 'Deactivate' : 'Activate'}
+                                </button>
+                                <button onclick="resetUserPasswordPrompt(${u.id}, '${u.username}')" class="px-2 py-1 rounded bg-sky-50 hover:bg-sky-100 text-sky-700 text-[10px] font-semibold" title="Reset password">
+                                    Reset Key
+                                </button>
+                                ${currentUser && currentUser.id !== u.id ? `
+                                <button onclick="deleteUserAccount(${u.id}, '${u.username}')" class="px-2 py-1 rounded bg-rose-50 hover:bg-rose-100 text-rose-600 text-[10px] font-semibold" title="Delete user">
+                                    Delete
+                                </button>` : ''}
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (e) {}
+        }
+
+        async function toggleUserStatus(userId, currentStatus) {
+            const nextStatus = currentStatus ? 0 : 1;
+            if (!confirm(`Are you sure you want to ${nextStatus ? 'activate' : 'deactivate'} this user account?`)) return;
+            try {
+                const res = await fetch(`/api/users/${userId}`, {
+                    method: 'PATCH',
+                    headers: { 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ isActive: nextStatus })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    loadUsers();
+                } else {
+                    alert(data.error || 'Failed to update user status');
+                }
+            } catch (e) {
+                alert('Network error updating user status');
+            }
+        }
+
+        async function resetUserPasswordPrompt(userId, username) {
+            const newPass = prompt(`Enter new password for ${username}:`);
+            if (!newPass) return;
+            if (newPass.length < 8) {
+                alert('Password must be at least 8 characters.');
+                return;
+            }
+            try {
+                const res = await fetch(`/api/users/${userId}`, {
+                    method: 'PATCH',
+                    headers: { 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: newPass })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('Password reset successfully!');
+                    loadUsers();
+                } else {
+                    alert(data.error || 'Failed to reset password');
+                }
+            } catch (e) {
+                alert('Network error resetting password');
+            }
+        }
+
+        async function deleteUserAccount(userId, username) {
+            if (!confirm(`Are you sure you want to permanently delete user account '${username}'? This cannot be undone.`)) return;
+            try {
+                const res = await fetch(`/api/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.message || 'User deleted successfully.');
+                    loadUsers();
+                } else {
+                    alert(data.error || 'Failed to delete user');
+                }
+            } catch (e) {
+                alert('Network error deleting user');
+            }
+        }
+
+        function exportCSV() {
+            window.location.href = `/api/leads/export?authorization=${encodeURIComponent(authToken)}`;
+        }
+
+        function openNewLeadModal() { document.getElementById('newLeadModal').classList.remove('hidden'); }
+        function closeNewLeadModal() { document.getElementById('newLeadModal').classList.add('hidden'); }
+
+        function openAddUserModal() { document.getElementById('addUserModal').classList.remove('hidden'); }
+        function closeAddUserModal() { document.getElementById('addUserModal').classList.add('hidden'); }
+
+        async function handleAddUserSubmit(e) {
+            e.preventDefault();
+            const payload = {
+                username: document.getElementById('uUsername').value.trim(),
+                password: document.getElementById('uPassword').value,
+                role: document.getElementById('uRole').value,
+                full_name: document.getElementById('uFullName').value.trim(),
+                email: document.getElementById('uEmail').value.trim()
+            };
+
+            try {
+                const res = await fetch('/api/users', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('User account created successfully!');
+                    closeAddUserModal();
+                    loadUsers();
+                } else {
+                    alert(data.error);
+                }
+            } catch (e) {
+                alert('Failed to create user');
+            }
+        }
+
+        async function handleManualLeadSubmit(e) {
+            e.preventDefault();
+            const payload = {
+                type: document.getElementById('mType').value,
+                fullName: document.getElementById('mName').value,
+                phone: document.getElementById('mPhone').value,
+                email: document.getElementById('mEmail').value,
+                city: document.getElementById('mCity').value,
+                selectedSize: document.getElementById('mSize').value,
+                priority: document.getElementById('mPriority').value,
+                assignedTo: document.getElementById('mAssigned').value,
+                notes: document.getElementById('mNotes').value
+            };
+
+            try {
+                const res = await fetch('/api/leads', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    closeNewLeadModal();
+                    loadKanban();
+                    loadStats();
+                } else {
+                    alert(data.error);
+                }
+            } catch (e) {
+                alert('Error submitting lead');
+            }
+        }
+
+        let debounceTimer = null;
+        function debounceLoadLeads() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => { loadLeadsTable(); }, 300);
+        }
+    </script>
+</body>
+</html>

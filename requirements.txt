@@ -1,0 +1,3 @@
+# WE CARE Water Treatment & CRM Platform
+# Built entirely on Python 3 standard library
+# Requires Python >= 3.9

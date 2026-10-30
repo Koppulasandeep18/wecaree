@@ -1,0 +1,9 @@
+.git
+.gitignore
+backup_pre_restructure/
+*.pyc
+__pycache__/
+.vscode/
+.idea/
+test_*.py
+check_links.py

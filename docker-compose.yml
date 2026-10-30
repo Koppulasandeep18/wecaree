@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  we-care-app:
+    build: .
+    container_name: we_care_platform
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+    volumes:
+      - we_care_data:/app/data
+
+volumes:
+  we_care_data:
+    driver: local

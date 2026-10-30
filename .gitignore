@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+.DS_Store
+Thumbs.db
+data/*.db-wal
+data/*.db-shm
+data/*.bak
+test_*.py
+check_links.py
+backup_pre_restructure/
