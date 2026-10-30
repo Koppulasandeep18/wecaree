@@ -394,7 +394,7 @@
                                     <tr class="text-[11px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2">
                                         <th class="py-2.5 px-3">Ref Code</th>
                                         <th class="py-2.5 px-3">Customer</th>
-                                        <th class="py-2.5 px-3">Size / Capacity</th>
+                                        <th class="py-2.5 px-3">System / Capacity</th>
                                         <th class="py-2.5 px-3">Stage</th>
                                         <th class="py-2.5 px-3 text-right">Action</th>
                                     </tr>
@@ -508,7 +508,7 @@
                     <div class="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs flex flex-wrap items-center justify-between gap-3">
                         <div class="relative w-full md:w-80">
                             <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                            <input type="text" id="leadSearch" oninput="debounceLoadLeads()" placeholder="Search customer, phone, size, city..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-wecare-blue">
+                            <input type="text" id="leadSearch" oninput="debounceLoadLeads()" placeholder="Search customer, phone, system, city..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-wecare-blue">
                         </div>
 
                         <div class="flex flex-wrap items-center gap-2">
@@ -551,7 +551,7 @@
                                     <tr class="bg-slate-50/70 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                                         <th class="py-3 px-5">Ref Code</th>
                                         <th class="py-3 px-5">Customer &amp; Location</th>
-                                        <th class="py-3 px-5">Product Size / Flow</th>
+                                        <th class="py-3 px-5">System / Flow Rating</th>
                                         <th class="py-3 px-5">Priority &amp; Follow-up</th>
                                         <th class="py-3 px-5">Stage</th>
                                         <th class="py-3 px-5 text-right">Actions</th>
@@ -656,7 +656,7 @@
                     <div class="flex flex-wrap items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
                         <div>
                             <h2 class="text-base font-extrabold text-slate-900">Sales Intelligence &amp; Demand Reports</h2>
-                            <p class="text-xs text-slate-500">Territory distribution and product-size demand analytics</p>
+                            <p class="text-xs text-slate-500">Territory distribution and product model demand analytics</p>
                         </div>
                         <button onclick="exportCSV()" class="px-4 py-2 rounded-xl bg-wecare-blue hover:bg-wecare-darkblue text-white text-xs font-bold flex items-center gap-2 shadow-sm transition-all">
                             <i data-lucide="download" class="w-4 h-4"></i> Download Full CSV Report
@@ -664,11 +664,11 @@
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Product-Size Demand -->
+                        <!-- Product Model Demand -->
                         <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
                             <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
                                 <i data-lucide="package" class="w-4 h-4 text-wecare-blue"></i>
-                                Scale Remover Product-Size Demand
+                                Scale Remover Product Model Demand
                             </h3>
                             <div class="space-y-3" id="reportProductDemand">
                                 <!-- Dynamic -->
@@ -878,7 +878,7 @@
             <div class="p-4 bg-sky-50/60 rounded-2xl border border-sky-100 mb-4">
                 <div class="text-[10px] uppercase font-bold text-wecare-blue mb-2">Technical Water &amp; Line Specifications</div>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                    <div><span class="text-slate-500 block text-[10px]">Model Size:</span> <strong id="profSize" class="text-slate-800 font-mono"></strong></div>
+                    <div><span class="text-slate-500 block text-[10px]">Model / System:</span> <strong id="profSize" class="text-slate-800 font-mono"></strong></div>
                     <div><span class="text-slate-500 block text-[10px]">Flow Rate:</span> <strong id="profFlow" class="text-slate-800 font-mono"></strong></div>
                     <div><span class="text-slate-500 block text-[10px]">Water Hardness:</span> <strong id="profHardness" class="text-slate-800 font-mono"></strong></div>
                     <div><span class="text-slate-500 block text-[10px]">Reported TDS:</span> <strong id="profTds" class="text-slate-800 font-mono"></strong></div>
@@ -1021,16 +1021,16 @@
                         <input type="text" id="mCity" placeholder="City, State" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1" for="mSize">Requested Size</label>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" for="mSize">Requested System</label>
                         <select id="mSize" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 font-mono">
-                            <option value="Size 33 × 450">Size 33 × 450 (1,500 LPH)</option>
-                            <option value="Size 33 × 600">Size 33 × 600 (2,000 LPH)</option>
-                            <option value="Size 33 × 750">Size 33 × 750 (3,000 LPH)</option>
-                            <option value="Size 33 × 900">Size 33 × 900 (4,000 LPH)</option>
-                            <option value="Size 40 × 750">Size 40 × 750 (5,000 LPH)</option>
-                            <option value="Size 40 × 900">Size 40 × 900 (7,000 LPH)</option>
-                            <option value="Size 75 × 750">Size 75 × 750 (10,000-12,000 LPH)</option>
-                            <option value="Size 75 × 900">Size 75 × 900 (12,000-14,000 LPH)</option>
+                            <option value="Residential Core">Residential Core (1,500 LPH)</option>
+                            <option value="Home & Villa Edition">Home & Villa Edition (2,000 LPH)</option>
+                            <option value="Estate Pro Edition">Estate Pro Edition (3,000 LPH)</option>
+                            <option value="Commercial Pro">Commercial Pro (4,000 LPH)</option>
+                            <option value="Commercial Master">Commercial Master (5,000 LPH)</option>
+                            <option value="Institutional Wing">Institutional Wing (7,000 LPH)</option>
+                            <option value="Industrial Heavy-Duty">Industrial Heavy-Duty (10,000-12,000 LPH)</option>
+                            <option value="Industrial Ultra">Industrial Ultra (12,000-14,000 LPH)</option>
                         </select>
                     </div>
                 </div>
